@@ -22,12 +22,13 @@ def webhook():
     data = request.json
     if "message" in data:
         chat_id = data["message"]["chat"]["id"]
-        text = data["message"].get("text", "")
+        text = data["message"].get("text", "").lower().strip()
+
         if text == "/start":
-            send_message(chat_id, "👋 Привет! Это *Фуд.Ешка* — бот с пошаговыми рецептами.\n\nНапиши /recipe, чтобы получить рецепт дня.", "Markdown")
-        elif text == "/recipe":
-            recipe = random.choice(recipes)
-            send_photo_with_caption(chat_id, recipe)
+            send_message(chat_id, "👋 Привет! Это *Фуд.Ешка* — бот с пошаговыми рецептами.\n\nНапиши /recipe, чтобы получить рецепт дня!", "Markdown")
+        elif text.startswith("/recipe"):
+            send_random_recipe(chat_id)
+
     return "OK"
 
 def send_message(chat_id, text, parse_mode=None):
@@ -37,9 +38,11 @@ def send_message(chat_id, text, parse_mode=None):
         payload["parse_mode"] = parse_mode
     requests.post(url, json=payload)
 
-def send_photo_with_caption(chat_id, recipe):
+def send_random_recipe(chat_id):
+    recipe = random.choice(recipes)
     caption = f"""🍽 *{recipe['title']}*
 🕒 Время: {recipe['time']}
+🏷 Категория: {recipe.get('category', 'рецепт')}
 
 📋 *Ингредиенты:*
 {chr(10).join(f"- {item}" for item in recipe['ingredients'])}
